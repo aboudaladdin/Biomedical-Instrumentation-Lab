@@ -19,6 +19,7 @@ from collections import deque
 import numpy as np
 import time
 from spo2_karthika import calculate_spo2
+from respiration_rate_sushmita import estimate_respiration_rate
 
 # Global configuration
 METRICS_WINDOW = 5  # seconds for metrics calculation
@@ -318,21 +319,23 @@ def animate(frame):
     hrv = calculate_hrv(beat_indices, sampling_rate=DATA_SAMPLING_RATE)
     pi = calculate_pi(list(ir_buffer), 100)
     spo2 = calculate_spo2(list(red_buffer), list(ir_buffer))
-
+    resp_rate,_,_ = estimate_respiration_rate(list(ir_buffer),fs=DATA_SAMPLING_RATE)
+    
     # Validate metrics against physiological ranges, show "--" if out of range
     rr_display = f"{rr:.1f}" if 300 <= rr <= 2000 else "--"
     hr_display = f"{hr:.1f}" if 30 <= hr <= 200 else "--"
     hrv_display = f"{hrv:.1f}" if 1 <= hrv <= 110 else "--"
     pi_display = f"{pi:.1f}" if 0.1 <= pi <= 20 else "--"
     spo2_display = f"{spo2:.1f}" if 70 <= spo2 <= 100 else "--"
-
+    resp_rate_display = f"{resp_rate:.1f}" if 9 <= resp_rate <= 30 else "--"
+    
     # Calculate actual sampling rate from timestamps
     current_time = time.time()
     recent_samples = [t for t in received_timestamps if current_time - t <= 1.0]
     sampling_rate = len(recent_samples)
 
     # Format metrics text display
-    metrics_text = f'RR: {rr_display} ms\nHR: {hr_display} BPM\nHRV: {hrv_display} ms\nPI: {pi_display}%\nSpO2: {spo2_display}%\nData Rate: {sampling_rate} Hz'
+    metrics_text = f'RR: {rr_display} ms\nHR: {hr_display} BPM\nHRV: {hrv_display} ms\nPI: {pi_display}%\nSpO2: {spo2_display}%\nRespirationRate: {resp_rate_display}%\nData Rate: {sampling_rate} Hz'
 
     # Update metrics text box
     if metrics_text_obj is not None:
